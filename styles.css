@@ -1,16 +1,355 @@
-body {
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #0b0f19;
-  color: #e5e7eb;
-  padding: 40px;
+/* styles.css — FixMySheet (dark, minimal, product-ish)
+   Works with the IDs used in app.js:
+   - #apiStatus (with .ok / .bad)
+   - #dedupeMsg
+*/
 
-  .status-row { display: flex; gap: 12px; align-items: center; margin: 20px 0; }
-  .status-pill { padding: 6px 10px; border-radius: 999px; font-size: 14px; border: 1px solid rgba(255,255,255,0.15); }
-  .status-pill.ok { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.35); }
-  .status-pill.bad { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.35); }
+:root{
+  --bg: #0b1220;
+  --panel: rgba(255,255,255,0.06);
+  --panel-2: rgba(255,255,255,0.09);
+  --border: rgba(255,255,255,0.10);
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.65);
+  --muted-2: rgba(255,255,255,0.50);
+  --accent: #5b8cff;
+  --accent-2: #7aa7ff;
+  --ok: #22c55e;
+  --bad: #ef4444;
+  --warn: #f59e0b;
 
-  .btn { padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer; }
-  .btn.secondary { background: transparent; color: inherit; }
-  .btn.primary { background: #5b8cff; color: #fff; border: none; }
+  --radius: 16px;
+  --radius-sm: 12px;
+  --shadow: 0 18px 55px rgba(0,0,0,0.55);
+  --shadow-soft: 0 10px 30px rgba(0,0,0,0.45);
+  --ring: 0 0 0 4px rgba(91,140,255,0.22);
 
+  --maxw: 1040px;
+  --pad: clamp(18px, 3vw, 28px);
+
+  --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+}
+
+body{
+  margin: 0;
+  font-family: var(--font);
+  color: var(--text);
+  background:
+    radial-gradient(900px 600px at 15% 25%, rgba(91,140,255,0.18), transparent 55%),
+    radial-gradient(800px 520px at 85% 20%, rgba(122,167,255,0.12), transparent 60%),
+    radial-gradient(900px 800px at 50% 120%, rgba(255,255,255,0.06), transparent 60%),
+    var(--bg);
+}
+
+/* Links */
+a{
+  color: var(--accent-2);
+  text-decoration: none;
+}
+a:hover{ text-decoration: underline; }
+
+/* Layout helpers */
+.container{
+  width: min(var(--maxw), calc(100% - 32px));
+  margin: 0 auto;
+}
+
+header{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  background: rgba(11,18,32,0.72);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  gap: 14px;
+}
+
+.brand{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.brand img{
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.brand .name{
+  font-size: 18px;
+}
+
+/* Pills / Status */
+.pill{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1;
+}
+
+#apiStatus.ok{
+  color: rgba(34,197,94,0.95);
+  border-color: rgba(34,197,94,0.35);
+  background: rgba(34,197,94,0.10);
+}
+
+#apiStatus.bad{
+  color: rgba(239,68,68,0.95);
+  border-color: rgba(239,68,68,0.35);
+  background: rgba(239,68,68,0.10);
+}
+
+/* Hero */
+.hero{
+  padding: clamp(28px, 6vw, 72px) 0 10px;
+}
+
+.hero-grid{
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: clamp(14px, 3vw, 26px);
+  align-items: start;
+}
+
+@media (max-width: 900px){
+  .hero-grid{ grid-template-columns: 1fr; }
+}
+
+.h1{
+  font-size: clamp(38px, 6vw, 58px);
+  line-height: 1.03;
+  margin: 0 0 12px;
+}
+
+.sub{
+  font-size: clamp(16px, 2.2vw, 20px);
+  color: var(--muted);
+  margin: 0 0 18px;
+}
+
+.actions{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+/* Cards */
+.card{
+  border: 1px solid var(--border);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.07), rgba(255,255,255,0.04));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  padding: var(--pad);
+}
+
+.card + .card{ margin-top: 14px; }
+
+.card-title{
+  font-weight: 700;
+  margin: 0 0 10px;
+  font-size: 15px;
+  color: rgba(255,255,255,0.90);
+}
+
+.card-help{
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Form */
+.form{
+  display: grid;
+  gap: 12px;
+}
+
+.field{
+  display: grid;
+  gap: 8px;
+}
+
+label{
+  font-size: 13px;
+  color: var(--muted);
+}
+
+input[type="text"],
+input[type="file"],
+select{
+  width: 100%;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.25);
+  color: var(--text);
+  padding: 11px 12px;
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
+input[type="file"]{
+  padding: 9px 12px;
+}
+
+input[type="text"]::placeholder{
+  color: rgba(255,255,255,0.40);
+}
+
+input[type="text"]:focus,
+select:focus,
+input[type="file"]:focus{
+  border-color: rgba(91,140,255,0.55);
+  box-shadow: var(--ring);
+}
+
+select{
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.65) 50%),
+    linear-gradient(135deg, rgba(255,255,255,0.65) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 2px),
+    calc(100% - 12px) calc(50% - 2px);
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 34px;
+}
+
+/* Two-column rows inside forms */
+.row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 700px){
+  .row{ grid-template-columns: 1fr; }
+}
+
+/* Toggles / checkboxes */
+.toggle{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.05);
+  border-radius: var(--radius-sm);
+}
+
+.toggle input{
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.toggle span{
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Buttons */
+button{
+  border: 1px solid transparent;
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+button:hover{
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.10);
+  transform: translateY(-1px);
+}
+
+button:active{
+  transform: translateY(0);
+}
+
+button.primary{
+  background: linear-gradient(135deg, var(--accent), #3f6fff);
+  border-color: rgba(91,140,255,0.60);
+  box-shadow: 0 14px 35px rgba(91,140,255,0.20);
+}
+
+button.primary:hover{
+  background: linear-gradient(135deg, #6a98ff, var(--accent));
+}
+
+button.ghost{
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.10);
+  color: var(--muted);
+}
+
+button:disabled{
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Messages */
+.msg{
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.msg.error{
+  color: rgba(239,68,68,0.95);
+}
+
+.msg.ok{
+  color: rgba(34,197,94,0.95);
+}
+
+/* Small utility blocks */
+.hint{
+  font-size: 12px;
+  color: var(--muted-2);
+  line-height: 1.35;
+}
+
+hr{
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 18px 0;
+}
+
+/* Footer */
+footer{
+  padding: 22px 0 40px;
+  color: var(--muted-2);
+  font-size: 13px;
+}
+
+/* Optional: sections */
+.section{
+  padding: 14px 0 40px;
 }

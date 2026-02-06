@@ -1,18 +1,108 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>FixMySheet</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Add your stylesheet + app -->
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <h1>FixMySheet</h1>
-  <p>Clean, dedupe, and audit spreadsheets.</p>
-<div class="status-row">
-  <span id="apiStatus" class="status-pill">API: unknown</span>
-  <button id="checkApiBtn" class="btn secondary">Check API</button>
-</div>
 
-  <button disabled>Frontend is alive</button>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <!-- optional logo -->
+        <!-- <img src="./assets/logo-navbar.png" alt="FixMySheet logo" /> -->
+        <span class="name">FixMySheet</span>
+      </div>
+
+      <div class="pill" id="apiStatus">API: unknown</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <h1 class="h1">FixMySheet</h1>
+          <p class="sub">Clean, dedupe, and audit spreadsheets.</p>
+
+          <div class="actions">
+            <button id="checkApiBtn" class="ghost" type="button">Check API</button>
+            <button class="ghost" type="button" disabled>Frontend is alive</button>
+          </div>
+
+          <p class="hint" style="margin-top: 12px;">
+            Tip: start with <b>/dedupe</b>. When we deploy the API later, this UI will stay the same—only the API URL changes.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Dedupe</div>
+          <p class="card-help">Upload a file and mark duplicates (audit-friendly output).</p>
+
+          <div class="form">
+            <div class="field">
+              <label for="dedupeFile">File (.csv, .xlsx)</label>
+              <input id="dedupeFile" type="file" />
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="dedupeMode">Mode</label>
+                <select id="dedupeMode">
+                  <option value="column">column</option>
+                  <option value="row">row</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="keepPolicy">Keep policy</label>
+                <select id="keepPolicy">
+                  <option value="mark_all">mark_all</option>
+                  <option value="keep_first">keep_first</option>
+                  <option value="keep_last">keep_last</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="columnModeFields" class="field">
+              <label for="keyColumn">Key column (required for column mode)</label>
+              <input id="keyColumn" type="text" placeholder="e.g., Application ID" />
+            </div>
+
+            <div id="rowModeFields" class="field" style="display:none;">
+              <label for="ignoreColumns">Ignore columns (row mode only, comma-separated)</label>
+              <input id="ignoreColumns" type="text" placeholder="e.g., UpdatedAt, Notes" />
+            </div>
+
+            <div class="row">
+              <label class="toggle">
+                <input id="ignoreCase" type="checkbox" />
+                <span>ignore_case</span>
+              </label>
+
+              <label class="toggle">
+                <input id="ignoreWhitespace" type="checkbox" />
+                <span>ignore_whitespace</span>
+              </label>
+            </div>
+
+            <button id="runDedupeBtn" class="primary" type="button">Run Dedupe</button>
+
+            <div id="dedupeMsg" class="msg"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <span>© FixMySheet</span>
+    </footer>
+  </main>
+
+  <script src="./app.js"></script>
 </body>
 </html>

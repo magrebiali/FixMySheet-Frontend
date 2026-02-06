@@ -3,7 +3,7 @@
    - Dedupe: POST /dedupe (multipart/form-data) -> downloads XLSX
 */
 
-const API_BASE = "http://localhost:8000"; // change later to your deployed API URL
+const DEFAULT_API_BASE = "http://localhost:8000";
 
 // ---------------------
 // Small UI helpers
@@ -12,20 +12,35 @@ function $(id) {
   return document.getElementById(id);
 }
 
+function getApiBase() {
+  // Optional: if later you add an input with id="apiBase", this will use it
+  const fromStorage = localStorage.getItem("FIXMYSHEET_API_BASE");
+  if (fromStorage && fromStorage.trim()) return fromStorage.trim().replace(/\/+$/, "");
+
+  const input = $("apiBase");
+  if (input && input.value.trim()) return input.value.trim().replace(/\/+$/, "");
+
+  return DEFAULT_API_BASE;
+}
+
 function setApiStatus(ok, text) {
   const el = $("apiStatus");
   if (!el) return;
-  el.textContent = text;
 
-  // Optional classes if your CSS supports .ok/.bad
+  el.textContent = text;
   el.classList.remove("ok", "bad");
   el.classList.add(ok ? "ok" : "bad");
 }
 
-function setMsg(text) {
+function setMsg(text, kind = "neutral") {
   const el = $("dedupeMsg");
   if (!el) return;
-  el.textContent = text;
+
+  el.textContent = text || "";
+  el.classList.remove("ok", "error");
+
+  if (kind === "ok") el.classList.add("ok");
+  if (kind === "error") el.classList.add("error");
 }
 
 function downloadBlob(blob, filename) {
@@ -39,10 +54,29 @@ function downloadBlob(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
+// Try to read JSON error (FastAPI JSONResponse), otherwise fallback to text
+async function readErrorMessage(res) {
+  let errText = `HTTP ${res.status}`;
+  try {
+    const data = await res.json();
+    errText = data.error || JSON.stringify(data);
+    return errText;
+  } catch (_) {
+    try {
+      errText = await res.text();
+      return errText || `HTTP ${res.status}`;
+    } catch (_) {
+      return `HTTP ${res.status}`;
+    }
+  }
+}
+
 // ---------------------
 // Health check
 // ---------------------
 async function checkApi() {
+  const API_BASE = getApiBase();
+
   try {
     const res = await fetch(`${API_BASE}/`, { method: "GET" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -73,6 +107,8 @@ function syncModeUI() {
 // Dedupe submit
 // ---------------------
 async function runDedupe() {
+  const API_BASE = getApiBase();
+
   const fileInput = $("dedupeFile");
   const mode = ($("dedupeMode")?.value || "").trim();
   const keepPolicy = ($("keepPolicy")?.value || "mark_all").trim();
@@ -85,22 +121,22 @@ async function runDedupe() {
 
   // Basic validations
   if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-    setMsg("Please choose a file first.");
+    setMsg("Please choose a file first.", "error");
     return;
   }
 
   if (mode !== "column" && mode !== "row") {
-    setMsg("Mode must be 'column' or 'row'.");
+    setMsg("Mode must be 'column' or 'row'.", "error");
     return;
   }
 
   if (!["mark_all", "keep_first", "keep_last"].includes(keepPolicy)) {
-    setMsg("keep_policy must be mark_all, keep_first, or keep_last.");
+    setMsg("keep_policy must be mark_all, keep_first, or keep_last.", "error");
     return;
   }
 
   if (mode === "column" && !keyColumn) {
-    setMsg("Key column is required for column mode.");
+    setMsg("Key column is required for column mode.", "error");
     return;
   }
 
@@ -114,11 +150,11 @@ async function runDedupe() {
 
   if (mode === "column") {
     form.append("key_column", keyColumn);
-  } else if (mode === "row") {
+  } else {
     if (ignoreColumns) form.append("ignore_columns", ignoreColumns);
   }
 
-  setMsg("Running dedupe…");
+  setMsg("Running dedupe…", "neutral");
 
   try {
     const res = await fetch(`${API_BASE}/dedupe`, {
@@ -127,29 +163,16 @@ async function runDedupe() {
     });
 
     if (!res.ok) {
-      // Prefer JSON error
-      let errText = `HTTP ${res.status}`;
-      try {
-        const data = await res.json();
-        errText = data.error || JSON.stringify(data);
-      } catch (_) {
-        // If not JSON, try text
-        try {
-          errText = await res.text();
-        } catch (_) {}
-      }
+      const errText = await readErrorMessage(res);
       throw new Error(errText);
     }
 
     const blob = await res.blob();
-
-    // Backend returns filename FixMySheet_Dedupe.xlsx
-    // but we force a friendly name anyway.
     downloadBlob(blob, "FixMySheet_Dedupe.xlsx");
 
-    setMsg("Done ✅ Download should start automatically.");
+    setMsg("Done ✅ Download should start automatically.", "ok");
   } catch (err) {
-    setMsg(`Error: ${err.message}`);
+    setMsg(`Error: ${err.message}`, "error");
   }
 }
 
@@ -157,14 +180,10 @@ async function runDedupe() {
 // Boot
 // ---------------------
 document.addEventListener("DOMContentLoaded", () => {
-  // Health check wiring
   $("checkApiBtn")?.addEventListener("click", checkApi);
-  checkApi(); // auto check on load
-
-  // Mode toggle wiring
   $("dedupeMode")?.addEventListener("change", syncModeUI);
-  syncModeUI();
-
-  // Dedupe button wiring
   $("runDedupeBtn")?.addEventListener("click", runDedupe);
+
+  syncModeUI();
+  checkApi(); // auto check on load
 });

@@ -2,6 +2,7 @@
    - Health check: GET /
    - Dedupe: POST /dedupe (multipart/form-data) -> downloads XLSX
 */
+console.log("app.js loaded ✅");
 
 const DEFAULT_API_BASE = "http://localhost:8000";
 

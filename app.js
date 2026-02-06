@@ -176,14 +176,37 @@ async function runDedupe() {
   }
 }
 
+function persistApiBase() {
+  const input = $("apiBase");
+  if (!input) return;
+
+  const value = input.value.trim();
+  if (value) {
+    localStorage.setItem("FIXMYSHEET_API_BASE", value.replace(/\/+$/, ""));
+  }
+}
+
 // ---------------------
 // Boot
 // ---------------------
 document.addEventListener("DOMContentLoaded", () => {
+  const apiInput = $("apiBase");
+
+  // Restore saved API base
+  const saved = localStorage.getItem("FIXMYSHEET_API_BASE");
+  if (apiInput && saved) apiInput.value = saved;
+
+  apiInput?.addEventListener("change", () => {
+    persistApiBase();
+    checkApi();
+  });
+
   $("checkApiBtn")?.addEventListener("click", checkApi);
   $("dedupeMode")?.addEventListener("change", syncModeUI);
   $("runDedupeBtn")?.addEventListener("click", runDedupe);
 
   syncModeUI();
   checkApi(); // auto check on load
+});
+
 });
